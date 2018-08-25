@@ -54,7 +54,8 @@ def slizzy(track, modules, download_tracks):
   
   
   if module.zippy in modules:
-    from slizzy.zippy import zippy
+    from slizzy.google import google
+    from slizzy.zippy  import zippy
     
     zippy_downloads = [
       dl
