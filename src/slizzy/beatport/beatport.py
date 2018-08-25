@@ -67,7 +67,7 @@ def get_metadata(track, url):
     name, duration = scrap(url)
     
     if fuzz.ratio(name, track.name) < cfg.fuzz_threshold:
-      raise ValueError("track name mismatch ('{}', '{}')[{}] below [{}].".format(
+      raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
         name,
         track.name,
         fuzz.ratio(name, track.name),

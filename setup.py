@@ -13,7 +13,7 @@ setup(
   long_description = long_description,
   long_description_content_type = "text/markdown",
   
-  version = "1.1.2",
+  version = "1.1.4",
   
   author = "gahag",
   author_email = "gabriel.s.b@live.com",
@@ -28,7 +28,8 @@ setup(
     "colorama",
     "hsaudiotag3k",
     "fuzzywuzzy",
-    "requests"
+    "requests",
+    "python-Levenshtein"
   ],
   
   entry_points = {

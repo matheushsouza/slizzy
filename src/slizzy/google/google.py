@@ -48,7 +48,7 @@ def fetch(query, domain):
   filtered = list(
     filter(
       domain.regex.match,
-      (item['formattedUrl'] for item in search)
+      (item['link'] for item in search)
     )
   )
   

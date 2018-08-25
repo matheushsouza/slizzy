@@ -42,7 +42,7 @@ def slizzy(track, modules, download_tracks):
       )
     except StopIteration:
       logger.log("Track duration unavailable", logging.level.error)
-      sys.exit(3)
+      return
   
   
   if module.slider in modules:
@@ -92,7 +92,7 @@ def slizzy(track, modules, download_tracks):
     ))
   
   logger.br()
-  logger.finish("Slizzied " + str(len(downloads)) + " tracks.")
+  logger.finish("Slizzied " + str(len(downloads)) + " files.")
 
 
 
@@ -189,7 +189,7 @@ def main(argv):
       for track in tracks:
         print(color.yellow(70 * "-"))
         slizzy(track, modules, download_tracks)
-    except ConfigError as e:
+    except config.ConfigError as e:
       print("Error (config): " + str(e), file = sys.stderr)
       sys.exit(2)
   
@@ -206,7 +206,7 @@ def main(argv):
     
     try:
       config.update(config.cfg)
-    except ConfigError as e:
+    except config.ConfigError as e:
       print("Error (config): " + str(e), file = sys.stderr)
       sys.exit(2)
 

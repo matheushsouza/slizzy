@@ -121,7 +121,7 @@ def get_download(track, url):
     title, download = scrap(url, key, fetch_page(url, key))
     
     if fuzz.ratio(title, track.title) < cfg.fuzz_threshold:
-      raise ValueError("track name mismatch ('{}', '{}')[{}] below [{}].".format(
+      raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
         title,
         track.title,
         fuzz.ratio(title, track.title),
