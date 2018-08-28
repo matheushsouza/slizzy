@@ -32,7 +32,10 @@ def fetch_info(info):
     page = requests.get(base_url + info)
 
     if page.status_code != 200:
-      progress.finish("http code " + str(page.status_code) + ".")
+      progress.finish(
+        "Failed to fetch metadata: http code " + str(page.status_code) + ".",
+        level = logging.level.warn
+      )
       return None
     
     lines = re.sub(r"</?b>", "", page.text).split("<br>") # remove unwanted tags.

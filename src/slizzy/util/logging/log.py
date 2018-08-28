@@ -41,16 +41,19 @@ class Logger:
         self.text   = text
         self.index  = index
       
-      def finish(self, text):
-        self.step(text, end = True)
+      def finish(self, text, level = None):
+        self.step(text, end = True, level_ = level)
         self.logger.in_progress = False
       
-      def step(self, text = None, end = False):
-        if text:
+      def step(self, text = None, end = False, level_ = None):
+        if text or level_:
           self.text = text
           print("\033[K", end = "") # Clear the line
 
-        text = self.logger.prefix(level.done if end else level.info) + self.text
+        if not level_:
+          level_ = level.done if end else level.info
+
+        text = self.logger.prefix(level_) + self.text
         
         if self.index and not end:
           text += color.yellow(" #" + str(self.index))
