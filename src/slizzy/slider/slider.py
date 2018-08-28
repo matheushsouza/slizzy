@@ -32,7 +32,8 @@ def fetch_info(info):
     page = requests.get(base_url + info)
 
     if page.status_code != 200:
-      raise requests.exceptions.HTTPError("http code " + str(page.status_code) + ".")
+      progress.finish("http code " + str(page.status_code) + ".")
+      return None
     
     lines = re.sub(r"</?b>", "", page.text).split("<br>") # remove unwanted tags.
     
@@ -112,7 +113,7 @@ def filter_entries(entries, track):
     }
     for entry in entries
     for info in [ fetch_info(entry["info_url"]) ]
-    if info["bitrate"] in tolerance.bitrate
+    if info and info["bitrate"] in tolerance.bitrate
   ]
   
   logger.log(
