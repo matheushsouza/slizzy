@@ -29,7 +29,7 @@ key = <key>
 
 [beatport]
 cx = <cx>
-fuzz-threshold = 60
+fuzz-threshold = 50
 
 [slider]
 fuzz-threshold = 10

@@ -13,7 +13,7 @@ setup(
   long_description = long_description,
   long_description_content_type = "text/markdown",
   
-  version = "1.1.5",
+  version = "1.1.6",
   
   author = "gahag",
   author_email = "gabriel.s.b@live.com",
