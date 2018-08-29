@@ -1,12 +1,14 @@
 import ast
 import re
+from fuzzywuzzy import fuzz
 
 
 __all__ = [
   "literal",
   "normalize_spaces",
   "read_int",
-  "read_float"
+  "read_float",
+  "fuzz_match"
 ]
 
 
@@ -31,3 +33,6 @@ def read_float(string):
   except StopIteration:
     raise ValueError("no float in string") from None
 
+
+def fuzz_match(s1, s2):
+  return fuzz.ratio(s1.lower(), s2.lower())

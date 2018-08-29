@@ -1,7 +1,6 @@
 import re
 import requests
 import json
-from fuzzywuzzy import fuzz
 
 from .. import tolerance
 from ..config import slider as cfg
@@ -89,7 +88,7 @@ def filter_entries(entries, track):
 
   # Filter by name:
   entries, filtered = iterator.partition(
-    lambda e: fuzz.ratio(e["tit_art"], track.name) > cfg.fuzz_threshold,
+    lambda e: string.fuzz_match(e["tit_art"], track.name) > cfg.fuzz_threshold,
     entries
   )
 

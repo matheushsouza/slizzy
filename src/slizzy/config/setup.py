@@ -41,6 +41,7 @@ blacklist =
   DANCEDJ\.CLUB
   \[ClapCrate\.me\]
   \[RIP\]
+  Bass *Boosted
 """
 
 

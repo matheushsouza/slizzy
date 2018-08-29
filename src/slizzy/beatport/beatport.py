@@ -1,10 +1,9 @@
 import requests
-from fuzzywuzzy import fuzz
 from bs4 import BeautifulSoup
 
 from ..config import beatport as cfg
 from ..google import Domain
-from ..util import logging, time
+from ..util import logging, string, time
 
 
 __all__ = [
@@ -66,11 +65,11 @@ def get_metadata(track, url):
   try:
     name, duration = scrap(url)
     
-    if fuzz.ratio(name, track.name) < cfg.fuzz_threshold:
+    if string.fuzz_match(name, track.name) < cfg.fuzz_threshold:
       raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
         name,
         track.name,
-        fuzz.ratio(name, track.name),
+        string.fuzz_match(name, track.name),
         cfg.fuzz_threshold
       ))
     

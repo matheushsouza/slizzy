@@ -2,7 +2,6 @@ import re
 import requests
 from bs4          import BeautifulSoup
 from functools    import reduce
-from fuzzywuzzy   import fuzz
 from hsaudiotag   import mp4
 from io           import BytesIO
 from urllib.parse import urlparse
@@ -120,11 +119,11 @@ def get_download(track, url):
 
     title, download = scrap(url, key, fetch_page(url, key))
     
-    if fuzz.ratio(title, track.title) < cfg.fuzz_threshold:
+    if string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
       raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
         title,
         track.title,
-        fuzz.ratio(title, track.title),
+        string.fuzz_match(title, track.title),
         cfg.fuzz_threshold
       ))
     
