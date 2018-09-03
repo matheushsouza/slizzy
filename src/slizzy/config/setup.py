@@ -39,7 +39,7 @@ cx = <cx>
 fuzz-threshold = 40
 blacklist =
   DANCEDJ\.CLUB
-  \[ClapCrate\.me\]
+  \[ClapCrate\.\w+\]
   \[RIP\]
   Bass *Boosted
 """

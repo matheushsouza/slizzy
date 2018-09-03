@@ -18,9 +18,9 @@ logger = logging.Logger("slider")
 base_url = "http://slider.kz"
 
 
-def fetch_info(info):
-  progress = logger.progress("Fetching metadata (" + info + ")", 1)
-
+def fetch_info(id, duration):
+  progress = logger.progress("Fetching metadata (" + id + ")", 1)
+  
   result = {
     "bitrate" : 0,
     "size"    : (0, "") # Size, multiplier.
@@ -28,8 +28,8 @@ def fetch_info(info):
   while not result["bitrate"]:
     progress.step()
     
-    page = requests.get(base_url + info)
-
+    page = requests.get(base_url + "/info/{}/{}".format(duration, id))
+    
     if page.status_code != 200:
       progress.finish(
         "Failed to fetch metadata: http code " + str(page.status_code) + ".",
@@ -48,7 +48,7 @@ def fetch_info(info):
       logger.error("failed to retrieve track info.")
       raise ValueError(lines) from e
   
-  progress.finish("Fetched metadata: {} ({})".format(result, info))
+  progress.finish("Fetched metadata: {} ({})".format(result, id))
   
   return result
 
@@ -66,11 +66,8 @@ def fetch_entries(track):
     
     raw_entries = json.loads(page.content)
   
-  entries = [
-    obj["entry"]
-    for obj in raw_entries["feed"]
-  ]
-
+  entries = raw_entries["audios"]
+  
   progress.finish(
     "Retrieved " + color.result(len(entries)) + " slider " +
     ("entry." if len(entries) == 1 else "entries.")
@@ -111,10 +108,10 @@ def filter_entries(entries, track):
       "duration" : entry["duration"],
       "size"     : info["size"],
       "bitrate"  : info["bitrate"],
-      "download" : base_url + entry["url"]
+      "download" : base_url + "/download/" + entry["id"] + ".mp3"
     }
     for entry in entries
-    for info in [ fetch_info(entry["info_url"]) ]
+    for info in [ fetch_info(entry["id"], entry["duration"]) ]
     if info and info["bitrate"] in tolerance.bitrate
   ]
   
