@@ -119,7 +119,7 @@ def get_download(track, url):
 
     title, download = scrap(url, key, fetch_page(url, key))
     
-    if string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
+    if title and string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
       raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
         title,
         track.title,
