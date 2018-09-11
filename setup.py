@@ -6,6 +6,9 @@ from setuptools import setup, find_packages
 with open('README.md') as readme:
   long_description = readme.read()
 
+with open('src/slizzy/version.py') as version:
+  exec(version.read())
+
 setup(
   name = "slizzy",
   description = "Slizzy is a program and a library to search for tracks and download "
@@ -13,7 +16,7 @@ setup(
   long_description = long_description,
   long_description_content_type = "text/markdown",
   
-  version = "1.1.11",
+  version = __version__,
   
   author = "gahag",
   author_email = "gabriel.s.b@live.com",

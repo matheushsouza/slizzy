@@ -4,9 +4,10 @@ import argparse
 import enum
 import sys
 
-import slizzy.config as config
-from slizzy.track      import Track
-from slizzy.util       import color, logging, time
+import slizzy.config  as config
+import slizzy.version as version
+from slizzy.track     import Track
+from slizzy.util      import color, logging, time
 
 
 __all__ = [
@@ -100,20 +101,30 @@ def slizzy(track, modules, download_tracks):
 def parse_args(argv):
   parser = argparse.ArgumentParser(
     description = "Slizzy is a tool to search for and "
-                  "download slider.kz and zippyshare objects."
+                  "download slider.kz and zippyshare objects.",
+    formatter_class = argparse.RawTextHelpFormatter
+  )
+  parser.add_argument(
+    "--version", "-v",
+    action = "version",
+    version = "\n".join([
+      "%(prog)s " + version.__version__,
+      "Copyright (c) 2018, gahag.",
+      "All rights reserved."
+    ])
   )
   commands = parser.add_subparsers(dest = "command", help = "commands")
 
-  dl  = commands.add_parser('dl',  help='download tracks')
-  lns = commands.add_parser('lns', help='get download links')
-  cfg = commands.add_parser('cfg', help='config')
+  dl  = commands.add_parser("dl",  help="download tracks")
+  lns = commands.add_parser("lns", help="get download links")
+  cfg = commands.add_parser("cfg", help="config")
   
   for command in [ dl, lns ]:
     command.add_argument(
       "tracks",
       help = "one or more tracks to seach, in the format: "
              "A & B ft. C - ID (D vs. E Remix)",
-      nargs = '+'
+      nargs = "+"
     )
     command.add_argument(
       "-d", "--duration",
