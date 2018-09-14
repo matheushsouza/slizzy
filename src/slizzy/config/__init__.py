@@ -1,7 +1,7 @@
 import sys
 
 from .configerror import ConfigError
-from .setup import setup, load, update
+from .setup import setup, update
 
 
 __all__ = [
@@ -17,8 +17,7 @@ __all__ = [
 
 
 try:
-  setup()
-  cfg = load()
-except Exception as e:
+  cfg = setup()
+except ConfigError as e:
   print("Error (config): " + str(e), file = sys.stderr)
   sys.exit(2)

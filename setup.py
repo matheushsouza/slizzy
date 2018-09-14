@@ -12,7 +12,7 @@ with open('src/slizzy/version.py') as version:
 setup(
   name = "slizzy",
   description = "Slizzy is a program and a library to search for tracks and download "
-                "slider.kz and zippyshare.com objects.",
+                "slider.kz, mp3co.biz and zippyshare.com objects.",
   long_description = long_description,
   long_description_content_type = "text/markdown",
   

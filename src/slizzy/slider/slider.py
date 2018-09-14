@@ -19,7 +19,7 @@ base_url = "http://slider.kz"
 
 
 def fetch_info(id, duration):
-  progress = logger.progress("Fetching metadata (" + id + ")", 1)
+  progress = logger.progress("Fetching metadata (" + id + ")...", 1)
   
   result = {
     "bitrate" : 0,
@@ -48,13 +48,13 @@ def fetch_info(id, duration):
       logger.error("failed to retrieve track info.")
       raise ValueError(lines) from e
   
-  progress.finish("Fetched metadata: {} ({})".format(result, id))
+  progress.finish("Fetched metadata ({}): {}".format(id, result))
   
   return result
 
 
 def fetch_entries(track):
-  progress = logger.progress("Retrieving slider entries", 1)
+  progress = logger.progress("Retrieving slider entries...", 1)
   
   raw_entries = 0
   while isinstance(raw_entries, int): # Slider sometimes returns error codes instead of
@@ -85,7 +85,7 @@ def filter_entries(entries, track):
 
   # Filter by name:
   entries, filtered = iterator.partition(
-    lambda e: string.fuzz_match(e["tit_art"], track.name) > cfg.fuzz_threshold,
+    lambda e: string.fuzz_match(e["tit_art"], track.title) > cfg.fuzz_threshold,
     entries
   )
 
@@ -125,7 +125,7 @@ def filter_entries(entries, track):
       "\n".join([
         "Track: " + entry["title"],
         "  duration : " + time.to_str(entry["duration"]),
-        "  size     : " + "{} {}".format(*entry["size"]),
+        "  size     : {} {}".format(*entry["size"]),
         "  bitrate  : " + str(entry["bitrate"]) + " kbps",
         "  link     : " + str(entry["download"])
       ])
@@ -136,7 +136,7 @@ def filter_entries(entries, track):
 
 
 def slider(track):
-  """Returns a list of entries containing: url, title, duration, size, bitrate"""
+  """Returns a list of entries containing: name, link"""
   logger.log("Running slider for track '" + track.query_string + "'.", logging.level.info)
 
   try:

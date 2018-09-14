@@ -21,3 +21,7 @@ def to_str(s):
     "%H:%M:%S" if s >= 3600 else "%M:%S",
     time.gmtime(s)
   )
+
+
+def to_mins(s):
+  return s / 60

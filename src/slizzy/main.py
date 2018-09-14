@@ -17,8 +17,8 @@ __all__ = [
 ]
 
 
-module = enum.Enum("modules", "slider zippy")
-all_modules = { module.slider, module.zippy }
+module = enum.Enum("modules", "slider mp3co zippy")
+all_modules = { module.slider, module.mp3co, module.zippy }
 
 
 
@@ -48,10 +48,16 @@ def slizzy(track, modules, download_tracks):
   
   if module.slider in modules:
     from slizzy.slider import slider
-    
-    slider_downloads = slider(track) if module.slider in modules else []
+    slider_downloads = slider(track)
   else:
     slider_downloads = []
+
+
+  if module.mp3co in modules:
+    from slizzy.mp3co import mp3co
+    mp3co_downloads = mp3co(track)
+  else:
+    mp3co_downloads = []
   
   
   if module.zippy in modules:
@@ -73,11 +79,15 @@ def slizzy(track, modules, download_tracks):
     logging.level.info
   )
   logger.log(
+    "Selected " + color.result(len(mp3co_downloads)) + " mp3co entries.",
+    logging.level.info
+  )
+  logger.log(
     "Selected " + color.result(len(zippy_downloads)) + " zippy entries.",
     logging.level.info
   )
   
-  downloads = slider_downloads + zippy_downloads
+  downloads = slider_downloads + mp3co_downloads + zippy_downloads
   
   if not downloads:
     logger.log("No entries to download.")
@@ -101,7 +111,7 @@ def slizzy(track, modules, download_tracks):
 def parse_args(argv):
   parser = argparse.ArgumentParser(
     description = "Slizzy is a tool to search for and "
-                  "download slider.kz and zippyshare objects.",
+                  "download slider.kz, mp3co.biz and zippyshare objects.",
     formatter_class = argparse.RawTextHelpFormatter
   )
   parser.add_argument(
@@ -134,6 +144,11 @@ def parse_args(argv):
       "--slider",
       action = "store_true",
       help = "search in slider.kz instead of all resources"
+    )
+    command.add_argument(
+      "--mp3co",
+      action = "store_true",
+      help = "search in mp3co.biz instead of all resources"
     )
     command.add_argument(
       "--zippy",
@@ -186,6 +201,7 @@ def main(argv):
       m
       for m, arg in [
         (module.slider, args.slider),
+        (module.mp3co, args.mp3co),
         (module.zippy,  args.zippy)
       ]
       if arg

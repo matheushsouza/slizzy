@@ -21,7 +21,7 @@ def init():
       stripped
       for item in cfg["zippyshare"]["blacklist"].splitlines()
       for stripped in [ item.strip() ]
-      if stripped # Remove blank entries
+      if stripped # Ignore blank entries.
     ]
   except Exception as e:
     raise ConfigError() from e
