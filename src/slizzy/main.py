@@ -48,14 +48,26 @@ def slizzy(track, modules, download_tracks):
   
   if module.slider in modules:
     from slizzy.slider import slider
+    
     slider_downloads = slider(track)
+
+    logger.log(
+      "Selected " + color.result(len(slider_downloads)) + " slider entries.",
+      logging.level.info
+    )
   else:
     slider_downloads = []
 
 
   if module.mp3co in modules:
     from slizzy.mp3co import mp3co
+    
     mp3co_downloads = mp3co(track)
+
+    logger.log(
+      "Selected " + color.result(len(mp3co_downloads)) + " mp3co entries.",
+      logging.level.info
+    )
   else:
     mp3co_downloads = []
   
@@ -70,22 +82,14 @@ def slizzy(track, modules, download_tracks):
       for dl   in [ zippy.get_download(track, page) ]
       if dl
     ]
+
+    logger.log(
+      "Selected " + color.result(len(zippy_downloads)) + " zippy entries.",
+      logging.level.info
+    )
   else:
     zippy_downloads = []
   
-  
-  logger.log(
-    "Selected " + color.result(len(slider_downloads)) + " slider entries.",
-    logging.level.info
-  )
-  logger.log(
-    "Selected " + color.result(len(mp3co_downloads)) + " mp3co entries.",
-    logging.level.info
-  )
-  logger.log(
-    "Selected " + color.result(len(zippy_downloads)) + " zippy entries.",
-    logging.level.info
-  )
   
   downloads = slider_downloads + mp3co_downloads + zippy_downloads
   
@@ -162,6 +166,10 @@ def parse_args(argv):
   # add arguments for other settings, specially thresholds.
 
 
+  if not argv:
+    parser.print_usage()
+    sys.exit(1)
+  
   args = parser.parse_args(argv)
 
   if args.command in [ "dl", "lns" ]:

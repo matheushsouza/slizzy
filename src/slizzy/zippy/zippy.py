@@ -57,11 +57,15 @@ def scrap(url, key, page):
   else:
     title = scrapper.find("font", text = re.compile("Name: ?")).find_next("font").text
 
+  size = string.read_float(
+    scrapper.find("font", text = re.compile("Size: ?")).find_next("font").text
+  )
+
   download = scrap_download(url, scrapper)
   
   progress.finish("Scrapped page: " + (title if title else "private download."))
   
-  return title, download
+  return title, size, download
 
 
 def scrap_download(url, scrapper):
@@ -87,8 +91,8 @@ def scrap_download(url, scrapper):
   return url.scheme + "://" + url.netloc + result
 
 
-def fetch_info(url, key):
-  progress = logger.progress("Fetching metadata (" + key + ")...")
+def fetch_duration(url, key):
+  progress = logger.progress("Fetching duration (" + key + ")...")
   progress.step()
 
   # This is a compressed file, so the bitrate is always 64 kbps.
@@ -106,7 +110,7 @@ def get_download(track, url):
     url = urlparse(url)
     key = url.path.split("/")[2]
 
-    title, download = scrap(url, key, fetch_page(url, key))
+    title, size, download = scrap(url, key, fetch_page(url, key))
     
     if title and string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
       raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
@@ -125,13 +129,15 @@ def get_download(track, url):
     if blacklisted:
       raise ValueError("track name blacklisted by '{}': '{}'.".format(blacklisted, title))
     
-    duration = fetch_info(url, key)
-    
+    duration = fetch_duration(url, key)
     if duration not in tolerance.duration(track.duration):
       raise ValueError("Duration mismatch: {}/{}.".format(
         time.to_str(duration),
         time.to_str(track.duration)
       ))
+
+    if size not in tolerance.size(duration):
+      raise ValueError("Size mismatch: {} mb / {}.".format(size, time.to_mins(duration)))
 
     logger.log("Selected download: " + download, logging.level.done)
     
