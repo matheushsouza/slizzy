@@ -57,7 +57,7 @@ def scrap(url, key, page):
   else:
     title = scrapper.find("font", text = re.compile("Name: ?")).find_next("font").text
 
-  size = string.read_float(
+  size = string.read_number(
     scrapper.find("font", text = re.compile("Size: ?")).find_next("font").text
   )
 

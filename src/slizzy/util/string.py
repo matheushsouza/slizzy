@@ -34,5 +34,17 @@ def read_float(string):
     raise ValueError("no float in string") from None
 
 
+def read_number(string):
+  try:
+    return read_float(string)
+  except:
+    pass
+
+  try:
+    return read_int(string)
+  except:
+    raise ValueError("no number in string") from None
+
+
 def fuzz_match(s1, s2):
   return fuzz.ratio(s1.lower(), s2.lower())

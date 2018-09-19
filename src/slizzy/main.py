@@ -50,11 +50,6 @@ def slizzy(track, modules, download_tracks):
     from slizzy.slider import slider
     
     slider_downloads = slider(track)
-
-    logger.log(
-      "Selected " + color.result(len(slider_downloads)) + " slider entries.",
-      logging.level.info
-    )
   else:
     slider_downloads = []
 
@@ -63,11 +58,6 @@ def slizzy(track, modules, download_tracks):
     from slizzy.mp3co import mp3co
     
     mp3co_downloads = mp3co(track)
-
-    logger.log(
-      "Selected " + color.result(len(mp3co_downloads)) + " mp3co entries.",
-      logging.level.info
-    )
   else:
     mp3co_downloads = []
   
@@ -82,14 +72,28 @@ def slizzy(track, modules, download_tracks):
       for dl   in [ zippy.get_download(track, page) ]
       if dl
     ]
+  else:
+    zippy_downloads = []
 
+
+  if module.slider in modules:
+    logger.log(
+      "Selected " + color.result(len(slider_downloads)) + " slider entries.",
+      logging.level.info
+    )
+  
+  if module.mp3co in modules:
+    logger.log(
+      "Selected " + color.result(len(mp3co_downloads)) + " mp3co entries.",
+      logging.level.info
+    )
+  
+  if module.zippy in modules:
     logger.log(
       "Selected " + color.result(len(zippy_downloads)) + " zippy entries.",
       logging.level.info
     )
-  else:
-    zippy_downloads = []
-  
+
   
   downloads = slider_downloads + mp3co_downloads + zippy_downloads
   
