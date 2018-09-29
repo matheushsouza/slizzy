@@ -67,9 +67,9 @@ def __download(dl):
   try:
     filename = cgi.parse_header(dl.page.headers.get("Content-Disposition"))[1]["filename"]
   except:
-    filename = dl.name
-  finally:
-    dl.progress.filename = path.unused_filename(path.sanitize(filename))
+    filename = None
+  
+  dl.progress.filename = path.unused_filename(path.sanitize(filename or dl.name))
 
   try:
     dl.progress.filesize = int(dl.page.headers["Content-Length"])
