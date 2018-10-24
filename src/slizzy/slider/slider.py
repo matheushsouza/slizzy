@@ -19,42 +19,7 @@ logger = logging.Logger("slider")
 base_url = "http://slider.kz"
 
 
-def fetch_info(id, duration):
-  progress = logger.progress("Fetching metadata (" + id + ")...", 1)
-  
-  result = {
-    "bitrate" : 0,
-    "size"    : (0, "") # Size, multiplier.
-  }
-  while not result["bitrate"]:
-    progress.step()
-    
-    page = requests.get(base_url + "/info/{}/{}".format(duration, id))
-    
-    if page.status_code != 200:
-      progress.finish(
-        "Failed to fetch metadata: http code " + str(page.status_code) + ".",
-        level = logging.level.warn
-      )
-      return None
-    
-    lines = re.sub(r"</?b>", "", page.text).split("<br>") # remove unwanted tags.
-    
-    try:
-      result = {
-        "bitrate" : string.read_int(lines[0]),
-        "size"    : (string.read_float(lines[1]), lines[1].split()[-1]) # Size, multiplier.
-      }
-    except Exception as e:
-      logger.error("failed to retrieve track info.")
-      raise ValueError(lines) from e
-  
-  progress.finish("Fetched metadata ({}): {}".format(id, result))
-  
-  return result
-
-
-def fetch_entries(track):
+def fetch(track):
   progress = logger.progress("Retrieving slider entries...", 1)
   
   raw_entries = 0
@@ -67,7 +32,17 @@ def fetch_entries(track):
     
     raw_entries = json.loads(page.content)
   
-  entries = list(itertools.chain.from_iterable(raw_entries["audios"].values()))
+  entries = [
+    types.Obj(
+      id       = entry["id"],
+      ext_id   = entry["ext"],
+      key      = key,
+      duration = entry["duration"],
+      title    = entry["tit_art"]
+    )
+    for key, entries in raw_entries["audios"].items()
+    for entry in entries
+  ]
   
   progress.finish(
     "Retrieved " + color.result(len(entries)) + " slider " +
@@ -77,16 +52,81 @@ def fetch_entries(track):
   return entries
 
 
-def filter_entries(entries, track):
-  # Filter by duration:
-  entries = filter(
-    lambda e: e["duration"] in tolerance.duration(track.duration),
-    entries
+def fetch_info(id, duration, info_url):
+  progress = logger.progress("Fetching metadata (" + id + ")...", 1)
+
+  data = types.Obj(
+    bitrate = 0,
+    size    = (0, "") # Size, multiplier.
+  )
+  while not data.bitrate:
+    progress.step()
+    
+    page = requests.get(info_url)
+    
+    if page.status_code != 200:
+      progress.finish(
+        "Failed to fetch metadata: http code " + str(page.status_code) + ".",
+        level = logging.level.warn
+      )
+      return None
+    
+    lines = re.sub(r"</?b>", "", page.text).split("<br>") # remove unwanted tags.
+    
+    try:
+      data = types.Obj(
+        bitrate = string.read_int(lines[0]),
+        size    = (string.read_float(lines[1]), lines[1].split()[-1]) # Size, multiplier.
+      )
+    except Exception as e:
+      progress.finish(
+        "Failed to fetch metadata: parse error.",
+        level = logging.level.warn
+      )
+      return None
+  
+  progress.finish(
+    "Fetched metadata ({}): duration = {}; bitrate = {}; size = {} {};".format(
+      id,
+      time.to_str(duration),
+      data.bitrate,
+      *data.size
+    )
+  )
+
+  return data
+
+
+def normalize(entries):
+  def norm(e):
+    info = fetch_info(
+      e.id,
+      e.duration,
+      "{}/info/{}/{}/{}/{}".format(base_url, e.duration, e.id, e.ext_id, e.key)
+    )
+    
+    return types.Obj(
+      id       = e.id,
+      title    = e.title,
+      duration = e.duration,
+      bitrate  = info and info.bitrate,
+      size     = info and info.size,
+      download = "{}/download/{}/{}/{}.mp3".format(base_url, e.key, e.id, e.ext_id)
+    )
+  
+  return [ norm(entry) for entry in entries ]
+
+
+def select(entries, track):
+  entries = (
+    entry for entry in entries
+          if entry.duration in tolerance.duration(track.duration)   # Filter by duration.
+             and entry.size and entry.bitrate in tolerance.bitrate  # Filter by bitrate.
   )
 
   # Filter by name:
   entries, filtered = iterator.partition(
-    lambda e: string.fuzz_match(e["tit_art"], track.title) > cfg.fuzz_threshold,
+    lambda entry: string.fuzz_match(entry.title, track.title) > cfg.fuzz_threshold,
     entries
   )
 
@@ -97,25 +137,11 @@ def filter_entries(entries, track):
         ("entry" if len(filtered) == 1 else "entries")
       ) +
       "\n".join(
-        "  " + entry["tit_art"]
+        "  " + entry.title
         for entry in filtered
       )
     )
 
-  # Filter by bitrate:
-  entries = [
-    {
-      "title"    : entry["tit_art"],
-      "duration" : entry["duration"],
-      "size"     : info["size"],
-      "bitrate"  : info["bitrate"],
-      "download" : base_url + "/download/" + entry["id"] + ".mp3"
-    }
-    for entry in entries
-    for info in [ fetch_info(entry["id"], entry["duration"]) ]
-    if info and info["bitrate"] in tolerance.bitrate
-  ]
-  
   logger.log(
     "Selected {} {}{}".format(
       color.result(len(entries)),
@@ -124,11 +150,11 @@ def filter_entries(entries, track):
     ) +
     "\n".join(
       "\n".join([
-        "Track: " + entry["title"],
-        "  duration : " + time.to_str(entry["duration"]),
-        "  size     : {} {}".format(*entry["size"]),
-        "  bitrate  : " + str(entry["bitrate"]) + " kbps",
-        "  link     : " + str(entry["download"])
+        "Track: " + entry.title,
+        "  duration : " + time.to_str(entry.duration),
+        "  size     : {} {}".format(*entry.size),
+        "  bitrate  : {} kbps".format(entry.bitrate),
+        "  link     : {}".format(entry.download)
       ])
       for entry in entries
   ))
@@ -143,10 +169,10 @@ def slider(track):
   try:
     return [
       types.Obj(
-        name = entry["title"],
-        link = entry["download"]
+        name = entry.title,
+        link = entry.download
       )
-      for entry in filter_entries(fetch_entries(track), track)
+      for entry in select(normalize(fetch(track)), track)
     ]
   except Exception as e:
     logger.log("Slider failed: " + str(e), logging.level.error)
