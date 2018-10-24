@@ -1,6 +1,7 @@
+import itertools
+import json
 import re
 import requests
-import json
 
 from .. import tolerance
 from ..config import slider as cfg
@@ -66,7 +67,7 @@ def fetch_entries(track):
     
     raw_entries = json.loads(page.content)
   
-  entries = raw_entries["audios"]
+  entries = list(itertools.chain.from_iterable(raw_entries["audios"].values()))
   
   progress.finish(
     "Retrieved " + color.result(len(entries)) + " slider " +
