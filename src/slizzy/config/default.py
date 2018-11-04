@@ -3,7 +3,7 @@ cfg = {
     "duration-tolerance" : 5,
     "bitrate-min"        : 315,
     "size-factor"        : 2.3,
-    "size-tolerance"     : 0.3
+    "size-tolerance"     : 0.9
   },
   
   "google" : {
