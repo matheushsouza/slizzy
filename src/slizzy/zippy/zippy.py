@@ -112,22 +112,23 @@ def get_download(track, url):
 
     title, size, download = scrap(url, key, fetch_page(url, key))
     
-    if title and string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
-      raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
-        title,
-        track.title,
-        string.fuzz_match(title, track.title),
-        cfg.fuzz_threshold
-      ))
-    
-    blacklisted = next(
-      (bl
-       for bl in cfg.blacklist
-       if re.search(bl, title, re.IGNORECASE)),
-      None
-    )
-    if blacklisted:
-      raise ValueError("track name blacklisted by '{}': '{}'.".format(blacklisted, title))
+    if title:
+      if string.fuzz_match(title, track.title) < cfg.fuzz_threshold:
+        raise ValueError("track name mismatch: ('{}', '{}')[{}] below [{}].".format(
+          title,
+          track.title,
+          string.fuzz_match(title, track.title),
+          cfg.fuzz_threshold
+        ))
+
+      blacklisted = next(
+        (bl
+         for bl in cfg.blacklist
+         if re.search(bl, title, re.IGNORECASE)),
+        None
+      )
+      if blacklisted:
+        raise ValueError("track name blacklisted by '{}': '{}'.".format(blacklisted, title))
     
     duration = fetch_duration(url, key)
     if duration not in tolerance.duration(track.duration):
