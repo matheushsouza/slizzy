@@ -26,7 +26,7 @@ domain = Domain(
 logger = logging.Logger("zippy")
 
 
-expired_label = "File has expired and does not exist anymore on this server"
+expired_label = r"File.* does not exist.* on this server"
 
 
 def fetch_page(url, key):
@@ -49,7 +49,7 @@ def scrap(url, key, page):
 
   scrapper = BeautifulSoup(page.content, "html.parser")
 
-  if scrapper.find("div", text = expired_label):
+  if scrapper.find("div", text = re.compile(expired_label)):
     raise ValueError("Expired file.")
 
   if scrapper.find("img", src = re.compile(r"^/fileName\?key=")):
