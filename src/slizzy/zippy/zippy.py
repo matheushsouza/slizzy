@@ -81,7 +81,9 @@ def scrap_download(url, scrapper):
     scrapper.find("script", text = re.compile(download_code_re)).text,
     re.MULTILINE
   ).group(1)
-  
+
+  script = script.replace("a() + b() + c() + d", "10")
+
   result = reduce(
     lambda acc, node: acc + str(string.literal(node) if '"' in node else math.eval(node)),
     re.split(r"\++(?=[^()]*(?:\(|$))", script), # Split on unparenthesised +
