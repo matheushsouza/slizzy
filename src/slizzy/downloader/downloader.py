@@ -48,11 +48,17 @@ class Progress:
         self.downloaded / 1048576.0,
         self.filename
       )
-    
-    return "{:3}% ({:4.1f}MB of {:4.1f}MB) | {}".format(
-      int(self.downloaded * 100.0 / self.filesize) if self.filesize else 0,
+
+    if self.filesize:
+      return "{:3}% ({:4.1f}MB of {:4.1f}MB) | {}".format(
+        int(self.downloaded * 100.0 / self.filesize),
+        self.downloaded / 1048576.0,
+        self.filesize   / 1048576.0,
+        self.filename
+      )
+
+    return " ? % ({:4.1f}MB of     ? MB) | {}".format(
       self.downloaded / 1048576.0,
-      self.filesize   / 1048576.0 if self.filesize else "     ?",
       self.filename
     )
 
