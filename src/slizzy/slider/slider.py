@@ -55,11 +55,9 @@ def fetch(track):
 def fetch_info(id, duration, info_url):
   progress = logger.progress("Fetching metadata (" + id + ")...", 1)
 
-  data = types.Obj(
-    bitrate = 0,
-    size    = (0, "") # Size, multiplier.
-  )
-  while not data.bitrate:
+  attempts = 10
+
+  for _ in range(attempts):
     progress.step()
     
     page = requests.get(info_url)
@@ -78,23 +76,30 @@ def fetch_info(id, duration, info_url):
         bitrate = string.read_int(lines[0]),
         size    = (string.read_float(lines[1]), lines[1].split()[-1]) # Size, multiplier.
       )
+
+      if data.bitrate:
+        progress.finish(
+          "Fetched metadata ({}): duration = {}; bitrate = {}; size = {} {};".format(
+            id,
+            time.to_str(duration),
+            data.bitrate,
+            *data.size
+          )
+        )
+        return data
+
     except Exception as e:
       progress.finish(
         "Failed to fetch metadata: parse error.",
         level = logging.level.warn
       )
       return None
-  
-  progress.finish(
-    "Fetched metadata ({}): duration = {}; bitrate = {}; size = {} {};".format(
-      id,
-      time.to_str(duration),
-      data.bitrate,
-      *data.size
-    )
-  )
 
-  return data
+  progress.finish(
+    "Failed to retrieve metadata after " + str(attempts) + " attempts.",
+    level = logging.level.warn
+  )
+  return None
 
 
 def normalize(entries):
