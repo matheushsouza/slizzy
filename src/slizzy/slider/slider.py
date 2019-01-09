@@ -35,8 +35,8 @@ def fetch(track):
   entries = [
     types.Obj(
       id       = entry["id"],
-      ext_id   = entry["ext"],
-      key      = key,
+      url      = entry["url"],
+      extra    = entry["extra"],
       duration = entry["duration"],
       title    = entry["tit_art"]
     )
@@ -107,7 +107,7 @@ def normalize(entries):
     info = fetch_info(
       e.id,
       e.duration,
-      "{}/info/{}/{}/{}/{}".format(base_url, e.duration, e.id, e.ext_id, e.key)
+      "{}/info/{}/{}/{}.mp3?extra={}".format(base_url, e.id, e.duration, e.url, e.extra)
     )
     
     return types.Obj(
@@ -116,7 +116,14 @@ def normalize(entries):
       duration = e.duration,
       bitrate  = info and info.bitrate,
       size     = info and info.size,
-      download = "{}/download/{}/{}/{}.mp3".format(base_url, e.key, e.id, e.ext_id)
+      download = "{}/download/{}/{}/{}/{}.mp3?extra={}".format(
+        base_url,
+        e.id,
+        e.duration,
+        e.url, 
+        e.title,
+        e.extra
+      )
     )
   
   return [ norm(entry) for entry in entries ]
