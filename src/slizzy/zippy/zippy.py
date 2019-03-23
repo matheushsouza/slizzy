@@ -1,3 +1,4 @@
+import math
 import re
 import requests
 from bs4          import BeautifulSoup
@@ -6,7 +7,7 @@ from urllib.parse import urlparse
 
 from .. import tolerance
 from ..config import zippy as cfg
-from ..util   import logging, math, mp3, string, time, types
+from ..util   import logging, math as math_util, mp3, string, time, types
 from ..google import Domain
 
 
@@ -71,24 +72,44 @@ def scrap(url, key, page):
 def scrap_download(url, scrapper):
   # The download script is something in the format:
   # <script type="text/javascript">
-  #   document.getElementById('dlbutton').href = "/d/<key>/" + (852443 % 51245 + 852443 % 913) + "/{...}.mp3";
-  #   ...
+  #     var a = 761204;
+  #     var b = 742589;
+  #     document.getElementById('dlbutton').omg = "f";
+  #     if (document.getElementById('dlbutton').omg != 'f') {
+  #        a = Math.ceil(a/3);
+  #     } else {
+  #        a = Math.floor(a/3);
+  #     }
+  #     document.getElementById('dlbutton').href = "/d/NZCSsATl/"+(a + 761204%b)+"/Pional%20-%20Tempest%20%28Original%20Mix%29%20%5bClapCrate.me%5d.mp3";
+  #     if (document.getElementById('fimage')) {
+  #         document.getElementById('fimage').href = "/i/NZCSsATl/"+(a + 761204%b)+"/Pional%20-%20Tempest%20%28Original%20Mix%29%20%5bClapCrate.me%5d.mp3";
+  #     }
   # </script>
   download_code_re = r"document\.getElementById\('dlbutton'\)\.href ?= ?"
-  
-  script = re.search(
+
+  script = scrapper.find("script", text = re.compile(download_code_re)).text
+
+  href = re.search(
     r"^ +" + download_code_re + r"(.+); *$",
-    scrapper.find("script", text = re.compile(download_code_re)).text,
+    script,
     re.MULTILINE
   ).group(1)
 
-  script = script.replace("a() + b() + c() + d", "10")
+  numbers = [ int(n) for n in re.findall(r"\d+", script)[:2] ]
 
-  result = reduce(
-    lambda acc, node: acc + str(string.literal(node) if '"' in node else math.eval(node)),
-    re.split(r"\++(?=[^()]*(?:\(|$))", script), # Split on unparenthesised +
-    ""
-  )
+  var_a = math.floor(numbers[0]/3)
+  var_b = numbers[1]
+
+  result = "".join([
+    str(
+      string.literal(node) if '"' in node
+      else math_util.eval(
+          node.replace("a", str(var_a)) \
+              .replace("b", str(var_b))
+      )
+    )
+    for node in re.split(r"\++(?=[^()]*(?:\(|$))", href) # Split on unparenthesised +
+  ])
   
   return url.scheme + "://" + url.netloc + result
 
