@@ -9,7 +9,7 @@ class Track:
   def __init__(self, title, duration = None):
     self.title = title
     
-    slash = title.split("-")
+    slash = title.split(" - ")
     paren = slash[1].split("(")
     self.artists = string.normalize_spaces(slash[0])
     self.name    = paren[0].strip()
