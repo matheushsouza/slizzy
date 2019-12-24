@@ -165,7 +165,13 @@ def get_download(track, url):
 
     logger.log("Selected download: " + download, logging.level.done)
     
-    return types.Obj(name = title, link = download)
+    return types.Obj(
+      name = title,
+      link = download,
+      duration = duration,
+      size = size,
+      bitrate = int(mp3.estimate_bitrate_from_size(size,duration))
+    )
   
   except ValueError as e:
     logger.log(str(e), logging.level.error)

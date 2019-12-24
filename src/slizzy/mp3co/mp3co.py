@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 from .. import tolerance
 from ..config import mp3co as cfg
-from ..util import bytes, color, iterator, logging, string, time, types
+from ..util import bytes, color, iterator, logging, string, time, types, mp3
 
 
 __all__ = [
@@ -14,7 +14,7 @@ __all__ = [
 logger = logging.Logger("mp3co")
 
 
-base_url = "https://mp3co.biz"
+base_url = "https://music2k.com"
 
 
 def fetch_size(id, download):
@@ -28,11 +28,11 @@ def fetch_size(id, download):
       raise requests.exceptions.HTTPError("http code " + str(page.status_code) + ".")
 
     size = int(page.headers["content-length"])
-    
+
     progress.finish("Fetched file size ({}): {:.2f} mb".format(id, bytes.to_MB(size)))
-    
+
     return size
-  
+
   except Exception as e:
     progress.finish(
       "Failed to fetch file size({}): {}".format(id, e),
@@ -41,20 +41,25 @@ def fetch_size(id, download):
     return None
 
 
-def fetch_entries(track):
+def fetch_entries(track, fetch_limit = False):
   progress = logger.progress("Retrieving mp3co entries...")
   progress.step()
-  
+
   page = requests.get(base_url + "/s/" + track.query_string)
-  
+
   if page.status_code != 200:
     raise requests.exceptions.HTTPError("http code " + str(page.status_code) + ".")
-  
+
   progress.step("Scrapping mp3co entries...")
-  
+
   scrapper = BeautifulSoup(page.content, "html.parser")
-  songs = scrapper.find("table", class_ = "songs")
-  
+  song_entries = scrapper.find("table", class_ = "songs").find_all("tr", recursive = False)
+
+  songs = song_entries
+
+  if fetch_limit :
+    songs = songs[:fetch_limit]
+
   entries = [
     types.Obj(
       id       = song["id"],
@@ -62,15 +67,15 @@ def fetch_entries(track):
       duration = time.from_str(song.find("td", class_ = "time").text),
       download = song.find("a", class_ = "i-dl")["href"]
     )
-    for song in songs.find_all("tr", recursive = False)
+    for song in songs
     for [ artist, name ] in [ song.find("td", class_ = "name").find_all("a") ]
   ]
-  
+
   progress.finish(
     "Retrieved " + color.result(len(entries)) + " mp3co " +
     ("entry." if len(entries) == 1 else "entries.")
   )
-  
+
   return entries
 
 
@@ -112,7 +117,7 @@ def filter_entries(entries, track):
     for size in [ fetch_size(entry.id, entry.download) ]
     if size and bytes.to_MB(size) in tolerance.size(entry.duration)
   ]
-  
+
   logger.log(
     "Selected {} {}{}".format(
       color.result(len(entries)),
@@ -128,21 +133,27 @@ def filter_entries(entries, track):
       ])
       for entry in entries
   ))
-  
+
   return entries
 
 
-def mp3co(track):
+def mp3co(track, fetch_limit = False):
   """Returns a list of entries containing: name, link"""
   logger.log("Running mp3co for track '" + track.query_string + "'.", logging.level.info)
 
   try:
     return [
       types.Obj(
-        name = entry.title,
-        link = entry.download
+        name     = entry.title,
+        link     = entry.download,
+        duration = entry.duration,
+        size     = bytes.to_MB(entry.size),
+        bitrate  = int(mp3.estimate_bitrate_from_size(
+          bytes.to_MB(entry.size),
+          entry.duration,
+        )),
       )
-      for entry in filter_entries(fetch_entries(track), track)
+      for entry in filter_entries(fetch_entries(track, fetch_limit), track)
     ]
   except Exception as e:
     logger.log("Mp3co failed: " + str(e), logging.level.error)

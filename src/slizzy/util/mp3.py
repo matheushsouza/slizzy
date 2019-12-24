@@ -2,7 +2,7 @@ import requests
 from hsaudiotag import mp4
 from io         import BytesIO
 
-from . import types
+from . import types, bytes
 
 
 def fetch_info(url):
@@ -21,3 +21,8 @@ def fetch_info(url):
       duration = mp3.duration,
       bitrate  = mp3.bitrate
     )
+
+  
+def estimate_bitrate_from_size(size_in_mb, duration_in_secs) :
+    # 1 byte = 8 bits; 1 Kb = 1000 bits
+    return ((bytes.to_B(size_in_mb) * 8) / 1000) / duration_in_secs

@@ -22,10 +22,10 @@ class Domain:
 logger = logging.Logger("google")
 
 
-def fetch(query, domain):
+def fetch(query, domain, fetch_limit = False):
   progress = logger.progress("Fetching search for '" + query + "'.")
   progress.step()
-  
+
   page = requests.get(
     "https://www.googleapis.com/customsearch/v1",
     params = {
@@ -34,15 +34,18 @@ def fetch(query, domain):
       "cx"  : domain.cx
     }
   )
-  
+
   if page.status_code != 200:
     raise requests.exceptions.HTTPError("http code " + str(page.status_code) + ".")
 
   try:
     search = json.loads(page.text)["items"]
+
+    if fetch_limit :
+      search = search[:fetch_limit]
   except Exception as e:
     raise ValueError("failed to obtain results.") from e
-  
+
   progress.finish("Retrieved " + color.result(len(search)) + " search results.")
 
   filtered = list(
@@ -51,20 +54,20 @@ def fetch(query, domain):
       (item['link'] for item in search)
     )
   )
-  
+
   logger.log("Selected " + color.result(len(filtered)) + " search results.")
-  
+
   return filtered
 
 
-def google(track, domain):
+def google(track, domain, fetch_limit = False):
   logger.log(
     "Google search at " + domain.name + ".",
     logging.level.info
   )
 
   try:
-    return fetch(track.query_string, domain)
+    return fetch(track.query_string, domain, fetch_limit)
   except Exception as e:
     logger.log("Google failed: " + str(e), logging.level.error)
     return []

@@ -19,9 +19,9 @@ logger = logging.Logger("slider")
 base_url = "http://slider.kz"
 
 
-def fetch(track):
+def fetch(track, fetch_limit = False):
   progress = logger.progress("Retrieving slider entries...", 1)
-  
+
   raw_entries = 0
   while isinstance(raw_entries, int): # Slider sometimes returns error codes instead of
     progress.step()                   # the desired result.
@@ -29,9 +29,9 @@ def fetch(track):
 
     if page.status_code != 200:
       raise requests.exceptions.HTTPError("http code " + str(page.status_code) + ".")
-    
+
     raw_entries = json.loads(page.content)
-  
+
   entries = [
     types.Obj(
       id       = entry["id"],
@@ -43,13 +43,17 @@ def fetch(track):
     for key, entries in raw_entries["audios"].items()
     for entry in entries
   ]
-  
+
+  retrieved_entries = entries
+  if fetch_limit :
+    retrieved_entries = retrieved_entries[:fetch_limit]
+
   progress.finish(
-    "Retrieved " + color.result(len(entries)) + " slider " +
+    "Retrieved " + color.result(len(retrieved_entries)) + " slider " +
     ("entry." if len(entries) == 1 else "entries.")
   )
-  
-  return entries
+
+  return retrieved_entries
 
 
 def fetch_info(id, duration, info_url):
@@ -59,18 +63,18 @@ def fetch_info(id, duration, info_url):
 
   for _ in range(attempts):
     progress.step()
-    
+
     page = requests.get(info_url)
-    
+
     if page.status_code != 200:
       progress.finish(
         "Failed to fetch metadata: http code " + str(page.status_code) + ".",
         level = logging.level.warn
       )
       return None
-    
+
     lines = re.sub(r"</?b>", "", page.text).split("<br>") # remove unwanted tags.
-    
+
     try:
       data = types.Obj(
         bitrate = string.read_int(lines[0]),
@@ -109,7 +113,7 @@ def normalize(entries):
       e.duration,
       "{}/info/{}/{}/{}.mp3?extra={}".format(base_url, e.id, e.duration, e.url, e.extra)
     )
-    
+
     return types.Obj(
       id       = e.id,
       title    = e.title,
@@ -120,12 +124,12 @@ def normalize(entries):
         base_url,
         e.id,
         e.duration,
-        e.url, 
+        e.url,
         e.title,
         e.extra
       )
     )
-  
+
   return [ norm(entry) for entry in entries ]
 
 
@@ -170,21 +174,24 @@ def select(entries, track):
       ])
       for entry in entries
   ))
-  
+
   return entries
 
 
-def slider(track):
+def slider(track, fetch_limit = False):
   """Returns a list of entries containing: name, link"""
   logger.log("Running slider for track '" + track.query_string + "'.", logging.level.info)
 
   try:
     return [
       types.Obj(
-        name = entry.title,
-        link = entry.download
+        name     = entry.title,
+        link     = entry.download,
+        duration = entry.duration,
+        size     = entry.size[0],
+        bitrate  = entry.bitrate,
       )
-      for entry in select(normalize(fetch(track)), track)
+      for entry in select(normalize(fetch(track, fetch_limit)), track)
     ]
   except Exception as e:
     logger.log("Slider failed: " + str(e), logging.level.error)
